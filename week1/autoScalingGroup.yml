@@ -1,0 +1,63 @@
+Description: "Auto scaling group"
+
+Parameters:
+  InstanceType:
+    Description: WebServer EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+
+  ImageId:
+    Description: EC2 instance configuration
+    Type: String
+    Default: ami-05cd35b907b4ffe77
+
+Resources:
+  FirstScalingGroup:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Metadata: 
+      AWS::CloudFormation::Init: 
+        config: 
+          commands: 
+    Properties:
+      KeyName: qwer1
+      ImageId: !Ref ImageId
+      InstanceType:
+        Ref: InstanceType
+      SecurityGroups:
+        - !Ref HTTPSecurityGroup
+        - !Ref SSHSecurityGroup
+
+  SSHSecurityGroup:
+    Description: Security group configuration for ssh access
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group For EC2
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  HTTPSecurityGroup:
+    Description: Security group configuration for http access
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group For EC2
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          
+  MyAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones: !GetAZs ''
+      MinSize: '2'
+      MaxSize: '2'
+      LaunchConfigurationName: !Ref FirstScalingGroup
+
